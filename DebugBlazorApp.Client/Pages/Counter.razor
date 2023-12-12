@@ -1,0 +1,56 @@
+﻿ @page "/counter"
+ @using Microsoft.AspNetCore.Components.WebAssembly.Services
+ @rendermode InteractiveWebAssembly
+ @inject LazyAssemblyLoader assemblyLoader
+
+<h1>Counter</h1>
+
+<p>Current count: @currentCount</p>
+
+<button class="btn btn-primary" @onclick="IncrementCount">Click me</button>
+
+@if(_loaded){
+    @RenderLazy
+}
+
+@code {
+    private int currentCount = 0;
+    private MyIncrementer incrementer = new MyIncrementer();
+    private bool _loaded = false;
+
+    private RenderFragment RenderLazy = __builder =>
+    {
+        <RazorClassLibrary1.Component1 />
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_loaded)
+        {
+            await assemblyLoader.LoadAssembliesAsync(
+                new List<string>() { "RazorClassLibrary1.wasm" });            
+            _loaded = true;
+        }
+    }
+
+    private void IncrementCount()
+    {
+        currentCount = incrementer.Increment(currentCount);
+    }
+
+    public class MyIncrementer
+    {
+        private Func<DateTime> todayFunc = () => DateTime.Now;
+
+        public int Increment(int count)
+        {
+            var today = todayFunc();
+            if (today.DayOfWeek == DayOfWeek.Sunday)
+            {
+                return count + 2;
+            }
+
+            return count + 1;
+        }
+    }
+ }
